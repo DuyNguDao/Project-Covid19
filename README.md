@@ -20,7 +20,7 @@ This package is built on top of the [Retinaface](https://github.com/biubug6/Pyto
 - Note: Download file about folder (./Project_5K/retinaface/weights)
 ### Face Mask Classification with MobilenetV2
 #### Test video
-    - python detect_dir_image.py or detect_video_retinaface.py
+    - python detect_video_retinaface.py
 ### Face mask detection with yoloV5
 #### Test video
     - python detect_video_yolov5.py
