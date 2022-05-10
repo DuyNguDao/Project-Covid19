@@ -34,7 +34,5 @@ This package is built on top of the [Retinaface](https://github.com/biubug6/Pyto
       - click first four point: left, top right, bottom right, bottom left
       - click again three point then compute pixel width, height: top left, top right, bottom left
 ## Demo
-- video demo
-- ![](https://github.com/DuyNguDao/Project-Covid19/blob/master/video_demo.mp4)
 - Bird eyes map
 - ![](https://github.com/DuyNguDao/Project-Covid19/blob/master/bird_eyes_map.gif)
