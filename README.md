@@ -20,22 +20,16 @@ This package is built on top of the [Retinaface](https://github.com/biubug6/Pyto
 - Note: Download file about folder (./Project_5K/retinaface/weights)
 ### Face Mask Classification with MobilenetV2
 #### Test video
-    - python detect_video_retinaface.py
+    - python detect_dir_image.py or detect_video_retinaface.py
 ### Face mask detection with yoloV5
 #### Test video
     - python detect_video_yolov5.py
 ## Distance and Crowd density
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- Detect distance with bird-eyes method 
+    - python distance_bird_eyes_video.py
+    - click four point with top left, top right, bottom right, bottom left
+- Detect distance with distance camera 3D
+    - python detect_video_yolov5.py
+    - click seven point:
+      - click first four point: left, top right, bottom right, bottom left
+      - click again three point then compute pixel width, height: top left, top right, bottom left

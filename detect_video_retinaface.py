@@ -5,7 +5,7 @@ Instructor: PhD. TRAN THI MINH HANH
 *************** CONTACT INFORMATION ***********************************
 THE UNIVERSITY OF DA NANG
 THE UNIVERSITY OF SCIENCE AND TECHNOLOGY
-THE FACULTY ELECTRONIC AND TELECOMMUNICATION
+THE FACULTY OF ELECTRONIC AND TELECOMMUNICATION
 Major: Computer engineering
 Address: 54 Nguyen Luong Bang Street, Lien Chieu District, Da Nang city
 ***********************************************************************
