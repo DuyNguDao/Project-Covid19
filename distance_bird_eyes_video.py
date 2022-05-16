@@ -16,15 +16,12 @@ import time
 import cv2
 from yolov5.detect import *
 import numpy as np
-from functions_processing import get_transform, point_distance, check_point_in_polygon
+import yaml
+from functions_processing import get_transform, point_distance, compute_transform_matrix,\
+    check_point_in_polygon
+from deep_sort import DeepSort
 
-# ************** SETUP CAMERA ******************
-# Setup width, height of object (cm)
-w_cm = 200
-h_cm = 200
-# set size view, map
-width_map = 480
-height_map = 640
+
 # **********************************************
 list_point_area = []
 
@@ -42,10 +39,11 @@ def get_pixel(event, x, y, flags, param):
                 cv2.line(image_set, (x, y), list_point_area[0], (70, 70, 70, 2))
         if 'list_point_area' not in globals():
             list_point_area = []
-        list_point_area.append((x, y))
+        if len(list_point_area) < 8:
+            list_point_area.append((x, y))
 
 
-def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='video.avi'):
+def detect_5k(url_video, path_model, path_deepsoft,flag_save=False, fps=None, name_video='video.avi'):
     """
     function: detect 5k, distance, face mask, total person
     :param url_video: url of video
@@ -58,6 +56,10 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
     count = 0
     # load model detect yolov5
     y5_model = Y5Detect(weights=path_model)
+
+    # load model deep soft
+    dsoft_model = DeepSort(model_path=path_deepsoft, use_cuda=False)
+
     if url_video == '':
         cap = cv2.VideoCapture(0)
     else:
@@ -76,10 +78,8 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
     if flag_save is True:
         video_writer = cv2.VideoWriter(name_video,
                                        cv2.VideoWriter_fourcc(*'MJPG'), fps, (frame_width, frame_height))
-        video_writer_map = cv2.VideoWriter('bird_eyes_map.avi',
-                                       cv2.VideoWriter_fourcc(*'MJPG'), fps, (width_map, height_map))
 
-    global image_set
+    global image_set, list_point_area
     while True:
         start = time.time()
         ret, frame = cap.read()
@@ -87,40 +87,102 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
             break
         if cv2.waitKey(1) == ord('q'):
             break
-
         h, w, _ = frame.shape
 
         if h > 1080 and w > 1920:
             frame = cv2.resize(frame, (1920, 1080), interpolation=cv2.INTER_AREA)
             h, w, _ = frame.shape
+
         if count == 0:
-            while True:
-                image_set = frame
-                cv2.imshow('image', image_set)
-                cv2.waitKey(1)
-                if len(list_point_area) == 7:
-                    cv2.destroyWindow('image')
-                    break
-        # convert bird-eye-view
-        src = np.float32(np.array(list_point_area[:4]))
-        dst = np.float32([[0, 0], [w, 0], [w, h], [0, h]])
-        transform = cv2.getPerspectiveTransform(src, dst)
+            # ******************* AREA LOAD CONFIG **************************
+            list_point_data = []
+            with open('bird_eyes_view.yaml', 'r') as yaml_file:
+                cfg = yaml.safe_load(yaml_file)
+            if cfg is not None:
+                for item, doc in cfg.items():
+                    if doc['url'] == url_video:
+                        w_cm = doc['w_cm']
+                        h_cm = doc['h_cm']
+                        for key in doc.keys():
+                            if key == 'url' or key == 'w_cm' or key == 'h_cm':
+                                continue
+                            list_point_data.append(doc[key])
+            if len(list_point_data) != 7:
+                print('Setting ROI area and ratio width, height (cm).')
+                while True:
+                    image_set = frame
+                    cv2.imshow('video', image_set)
+                    cv2.waitKey(1)
+                    if len(list_point_area) == 8:
+                        break
+                list_point_area.remove(list_point_area[len(list_point_area)-1])
+                # ************** SETUP CAMERA ******************
+                # Setup width, height of object (cm)
+                w_cm = input('Enter ratio for width(cm): ')
+                h_cm = input('Enter ratio for height(cm): ')
+                if w_cm == '':
+                    w_cm = 100
+                else:
+                    w_cm = int(w_cm)
+                if h_cm == '':
+                    h_cm = 100
+                else:
+                    h_cm = int(h_cm)
+                if cfg is None:
+                    cfg = []
 
-        # compute number pixel on distance(cm) at bird-eye map
-        pts = np.float32([np.array(list_point_area[4:])])
-        tran_pts = cv2.perspectiveTransform(pts, transform)[0]
+                data = {f'image_parameters{len(cfg)+1}':
+                            {'url': url_video,
+                            'top_left': list(list_point_area[0]),
+                            'top_right': list(list_point_area[1]),
+                            'bottom_right': list(list_point_area[2]),
+                            'bottom_left': list(list_point_area[3]),
+                            'coor_1': list(list_point_area[4]),
+                            'coor_2': list(list_point_area[5]),
+                            'coor_3': list(list_point_area[6]),
+                             'w_cm': w_cm,
+                             'h_cm': h_cm}}
+                with open('bird_eyes_view.yaml', 'a') as outfile:
+                    yaml.dump(data, outfile, sort_keys=False)
+            if len(list_point_area) != 7:
+                list_point_area = list_point_data
+            # ******************** AREA COMPUTE DATA ********************************
+            list_bbox_frame = [[0, 0], [w, 0], [w, h], [0, h]]
+            transform, h_frame, w_frame = compute_transform_matrix(list_point_area[:4], list_bbox_frame)
+            # compute number pixel on distance(cm) at bird-eye map
+            pts = np.float32([np.array(list_point_area[4:7])])
+            tran_pts = cv2.perspectiveTransform(pts, transform)[0]
+            distance_w = np.sqrt(np.sum((tran_pts[0] - tran_pts[1]) ** 2))
+            distance_h = np.sqrt(np.sum((tran_pts[0] - tran_pts[2]) ** 2))
+        # ************************************************************************************
 
-        distance_w = np.sqrt(np.sum((tran_pts[0]-tran_pts[1])**2))
-        distance_h = np.sqrt(np.sum((tran_pts[0]-tran_pts[2])**2))
-
-        count += 1
-        # initial coordinate spatial x, y, z (cm) and x, y (pixel)
+        # initial coordinate spatial bottom center and x, y (pixel)
         list_transform = dict()
         list_bbox_body = dict()
 
         # detect body of person
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         bbox, label, score = y5_model.predict(image)
+        bboxs, labels, scores = np.array(bbox), np.array(label), np.array(score)
+
+        # *********************** TRACKING PERSON AND AREA TRANSFORM ********************
+        if bbox is not None:
+            id_person = (labels == 'person')
+            bbox_person = bboxs[id_person]
+            score_person = scores[id_person]
+            if bbox_person is not None:
+                outputs = dsoft_model.update(bbox_person, score_person, image)
+                if len(outputs) > 0:
+                    # initial idx for dict
+                    idx = 0
+                    for box in outputs:
+                        if check_point_in_polygon(box[:4], list_point_area[:4]) != 360:
+                            continue
+                        list_bbox_body[idx] = box[:4]
+                        # transform point about bird-eyes-view
+                        coors_transform = get_transform(box[:4], transform)
+                        list_transform[idx] = coors_transform
+                        idx += 1
 
         # draw polygon
         for idx, point in enumerate(list_point_area[:4]):
@@ -130,26 +192,18 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
             else:
                 cv2.line(frame, list_point_area[idx], list_point_area[0], (255, 0, 0), 2)
 
-        # initial idx for dict
-        idx = 0
+        # ************************ AREA TRANSFORM AND DRAW FACE MASK ************************8
+
         # count without mask
         count_without_mask = 0
-        for i in range(len(label)):
-            # check bbox of person
-            if label[i] == 'person':
-                if check_point_in_polygon(bbox[i], list_point_area[:4]) != 360:
-                    continue
-                list_bbox_body[idx] = bbox[i]
-                # transform point about bird-eyes-view
-                list_transform[idx] = get_transform(bbox[i], transform)
-                idx += 1
+        for idx, box in enumerate(bboxs):
+            if label[idx] == 'person':
                 continue
-            if label[i] == 'withoutmask':
-                count_without_mask += 1
-
+            count_without_mask += 1
             # draw bounding box of with mask and without mask
-            frame, _ = draw_boxes(frame, bbox[i], label=label[i], scores=score[i])
+            frame, _ = draw_boxes(frame, box, label=label[idx], scores=score[idx])
 
+        # ******************************* CHECK VIOLATES **********************
         # compute distance between every person detect in a frame
         # initial set contain the index of the person that violates the distance
         violates_person = set()
@@ -164,6 +218,10 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
                         violates_person.add(i)
                         violates_person.add(j)
 
+        # *************** CREATE BIRD EYES VIEW ****************************
+        # set size view, map
+        width_map = 480
+        height_map = h
         # draw bounding of person
         view_map = np.zeros((height_map, width_map, 3), dtype='uint8')
         cv2.putText(view_map, 'High risk: ' + str(len(violates_person)), (0, 20), cv2.FONT_HERSHEY_SIMPLEX,
@@ -171,6 +229,9 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
         cv2.putText(view_map, 'Total person: ' + str(len(list_bbox_body)), (0, 40), cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 2, cv2.LINE_AA)
 
+        image_transform = cv2.warpPerspective(frame, transform, (w_frame, h_frame), flags=cv2.INTER_AREA,
+                                              borderMode=cv2.BORDER_WRAP)
+        # ********** DRAW BOUNDING BOX AND CIRCLE ON BIRD EYE VIEWS **********
         for i in list_transform.keys():
             if i in violates_person:
                 color = (0, 0, 255)
@@ -180,10 +241,14 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
             # convert pixel w, h about size view map
             x1, y1, x2, y2 = list_bbox_body[i]
             p_x, p_y = list_transform[i]
-            p_x, p_y = int(p_x*width_map/w), int(p_y*height_map/h)
+            cv2.circle(image_transform, (p_x, p_y), 5, color, 10)
+            p_x, p_y = int(p_x*width_map/w_frame), int(p_y*height_map/h_frame)
             # draw
             cv2.circle(view_map, (p_x, p_y), 5, color, 10)
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+
+        image_transform = cv2.resize(image_transform, (1280, 720), interpolation=cv2.INTER_AREA)
+        # ****************************************************************************8
 
         fps = int(1/(time.time()-start))
         # draw total without mask, distance violates, person, fps
@@ -191,38 +256,43 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
                     2, cv2.LINE_AA)
         cv2.putText(frame, 'without mask: ' + str(count_without_mask), (0, 40), cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 2, cv2.LINE_AA)
-        cv2.putText(frame, 'Distance < 2m: ' + str(len(violates_person)), (0, 60), cv2.FONT_HERSHEY_SIMPLEX,
+        cv2.putText(frame, 'High risk: ' + str(len(violates_person)), (0, 60), cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 2, cv2.LINE_AA)
         cv2.putText(frame, 'Total person: ' + str(len(list_bbox_body)), (0, 80), cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 2, cv2.LINE_AA)
 
+        # paste frame and bird eyes view
+        frame = np.concatenate((frame, view_map), axis=1)
+        frame = cv2.resize(frame, (w, h), interpolation=cv2.INTER_AREA)
         cv2.imshow('video', frame)
-        cv2.imshow('bird_eyes', view_map)
+        # cv2.imshow('transform', image_transform)
         cv2.waitKey(1)
+        count += 1
         if flag_save is True:
             video_writer.write(frame)
-            video_writer_map.write(view_map)
 
     cap.release()
     if flag_save is True:
         video_writer.release()
-        video_writer_map.release()
     cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Detect Face On Video')
     parser.add_argument("-fn", "--file_name", help="video file name or rtsp", default='', type=str)
-    parser.add_argument("-op", "--option", help="if save video then choice option = 1", default=False, type=bool)
+    parser.add_argument("-ds", "--deepsort_checkpoint", type=str, default="deep_sort/deep/checkpoint/ckpt.t7")
+    parser.add_argument("-op", "--option", help="if save video then choice option = 1", default=True, type=bool)
     parser.add_argument("-o", "--output", help="path to output video file", default='face_recording.avi', type=str)
     parser.add_argument("-f", "--fps", default=20, help="FPS of output video", type=int)
     args = parser.parse_args()
 
     path_models = '/home/duyngu/Downloads/Do_An/model_training/Yolov5/best.pt'
-    url = '/home/duyngu/Downloads/Do_An/video_cctv.mp4'
+    path_deepsoft = args.deepsort_checkpoint
+    url = '/home/duyngu/Downloads/Do_An/pedestrians.avi'
     source = args.file_name
-    cv2.namedWindow('image')
-    cv2.setMouseCallback('image', get_pixel)
+    cv2.namedWindow('video')
+    cv2.setMouseCallback('video', get_pixel)
     # if run  as terminal, replace url = source
-    detect_5k(url_video=url, path_model=path_models, flag_save=args.option, fps=args.fps, name_video=args.output)
+    detect_5k(url_video=url, path_model=path_models, path_deepsoft=path_deepsoft,
+              flag_save=args.option, fps=args.fps, name_video=args.output)
 

@@ -15,6 +15,7 @@ from retinaface import FaceDetection
 import time
 from classification.utils.load_model import Model
 from yolov5.detect import *
+from deep_sort import DeepSort
 
 
 def draw_bbox(image, bboxs):

@@ -1,0 +1,50 @@
+image_parameters1:
+  url: /home/duyngu/Downloads/Do_An/Student_video.mp4
+  top_left:
+  - 252
+  - 379
+  top_right:
+  - 477
+  - 318
+  bottom_right:
+  - 850
+  - 440
+  bottom_left:
+  - 630
+  - 596
+  coor_1:
+  - 627
+  - 555
+  coor_2:
+  - 681
+  - 516
+  coor_3:
+  - 535
+  - 504
+  w_cm: 100
+  h_cm: 100
+image_parameters2:
+  url: /home/duyngu/Downloads/Do_An/pedestrians.avi
+  top_left:
+  - 801
+  - 183
+  top_right:
+  - 1515
+  - 283
+  bottom_right:
+  - 1118
+  - 675
+  bottom_left:
+  - 216
+  - 445
+  coor_1:
+  - 1092
+  - 614
+  coor_2:
+  - 1162
+  - 534
+  coor_3:
+  - 943
+  - 581
+  w_cm: 150
+  h_cm: 150

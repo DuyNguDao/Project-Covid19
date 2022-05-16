@@ -29,10 +29,10 @@ def get_transform(bbox, transform):
     bbox: bbox of object
     transform: matrix transform
     """
-    bottem_point = ((bbox[0] + bbox[2])/2, bbox[3])
-    pts = np.float32(np.array([[bottem_point]]))
-    dst = cv2.perspectiveTransform(pts, transform)[0][0]
-    return int(dst[0]), int(dst[1])
+    bottem_point = (int((bbox[0] + bbox[2])/2), bbox[3])
+    pts = np.float32([np.array([bottem_point])])
+    dst = np.int32(cv2.perspectiveTransform(pts, transform))[0]
+    return dst[0]
 
 
 def point_distance(p1, p2, ratio_w, ratio_h, cm_w, cm_h):
@@ -74,3 +74,40 @@ def check_point_in_polygon(bbox, list_point):
         dot = np.dot(unit_vector_a, unit_vector_b)
         sum_angle += np.rad2deg(np.arccos(dot))
     return round(sum_angle)
+
+
+def compute_transform_matrix(list_bbox_area, list_bbox_frame):
+    """
+    function: compute transform matrix from four point and compute size frame new
+    + list_bbox_area: list bbox of transform area
+    + list_bbox_frame: list four coordinate of frame
+    + transform: matrix transform
+    + h_frame, w_frame: size new
+    """
+    # convert bird-eye-view
+    src = np.float32(np.array(list_bbox_area))
+    w_area = int(max(np.sqrt(np.sum((src[0] - src[1]) ** 2)), np.sqrt(np.sum((src[3] - src[2]) ** 2))))
+    h_area = int(max(np.sqrt(np.sum((src[1] - src[2]) ** 2)), np.sqrt(np.sum((src[0] - src[3]) ** 2))))
+    dst = np.float32([[0, 0], [w_area, 0], [w_area, h_area], [0, h_area]])
+    # find transform matrix 1
+    transform = cv2.getPerspectiveTransform(src, dst)
+    # again compute transform matrix with translate
+    # bbox of frame
+    # src_frame = np.float32([np.array(list_bbox_frame)])
+    # bbox_new = cv2.perspectiveTransform(src_frame, transform)[0]
+    #
+    # # translate about coordinate (0, 0)
+    # x_min, y_min = np.min(bbox_new, axis=0)
+    # x_max, y_max = np.max(bbox_new, axis=0)
+    # if x_min < 0:
+    #     dst[:, 0] = dst[:, 0] + abs(x_min)
+    # if y_min < 0:
+    #     dst[:, 1] = dst[:, 1] + abs(y_min)
+    # dst_translate = np.float32(dst)
+    # # compute w_frame, h_frame new
+    # h_frame = int(y_max - y_min)
+    # w_frame = int(x_max - x_min)
+    # find transform new
+    # transform = cv2.getPerspectiveTransform(src, dst_translate)
+
+    return transform, h_area, w_area
