@@ -183,7 +183,7 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
         bboxs, labels, scores = np.array(bbox), np.array(label), np.array(score)
 
         # *********************** GET ID PERSON AND AREA TRANSFORM ********************
-        if bbox is not None:
+        if len(bbox) > 0:
             id_person = (labels == 'person')
             bbox_person = bboxs[id_person]
             if len(bbox_person) > 0:
