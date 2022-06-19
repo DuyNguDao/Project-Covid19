@@ -17,6 +17,13 @@ from retinaface.detector import FaceDetection
 import argparse
 import os
 from classification.utils.load_model import Model
+from pathlib import Path
+
+
+# ******************************** ROOT PATH *****************************
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+WEIGHTS = ROOT / 'weight'
 
 
 def draw_bbox(image, bboxs):
@@ -43,7 +50,7 @@ def detect_image(path_image):
     list_images.sort()
     print("Number image: ", len(list_images))
     # load model face mask classification
-    model = Model("/home/duyngu/Downloads/Do_An/result_facemask_mobilenetv2_all/runs/exp0")
+    model = Model(WEIGHTS / 'result_mobilenetv2')
     # Load model face detect
     detector = FaceDetection(net='mobilenet').detect_faces
     # Set thresh

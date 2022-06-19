@@ -10,7 +10,7 @@ from classification.models.MobileNetV2 import mobilenet_v2
 class Model:
     def __init__(self, path):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.path = path
+        self.path = str(path)
         self.load_model()
 
     def load_model(self):
@@ -66,6 +66,3 @@ class Model:
         #print(index)
         return self.class_name[index], percentage
 
-
-if __name__ == "__main__":
-    model = Model("/home/cuong/Desktop/bianry_classification/runs/exp0")

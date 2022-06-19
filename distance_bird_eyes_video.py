@@ -19,14 +19,31 @@ import numpy as np
 import yaml
 from functions_processing import get_transform, point_distance, compute_transform_matrix,\
     check_point_in_polygon
-from deep_sort import DeepSort
+from pathlib import Path
 
+# ******************************** ROOT PATH *****************************
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+WEIGHTS = ROOT / 'weight'
 
-# **********************************************
+# ************************************************************************
 list_point_area = []
 
 
 def get_pixel(event, x, y, flags, param):
+    """
+    Function: Get coordinates of bird eye view
+    Parameters
+    ----------
+    event
+    x
+    y
+    flags
+    param
+
+    Returns
+    -------
+    """
     global list_point_area
     if event == cv2.EVENT_LBUTTONUP:
         if len(list_point_area) <= 3:
@@ -43,7 +60,7 @@ def get_pixel(event, x, y, flags, param):
             list_point_area.append((x, y))
 
 
-def detect_5k(url_video, path_model, path_deepsoft,flag_save=False, fps=None, name_video='video.avi'):
+def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='video.avi'):
     """
     function: detect 5k, distance, face mask, total person
     :param url_video: url of video
@@ -54,12 +71,10 @@ def detect_5k(url_video, path_model, path_deepsoft,flag_save=False, fps=None, na
     :return: None
     """
     count = 0
-    # load model detect yolov5
+    # ********************** LOAD MODEL ******************************************
     y5_model = Y5Detect(weights=path_model)
 
-    # load model deep soft
-    dsoft_model = DeepSort(model_path=path_deepsoft, use_cuda=False)
-
+    # ********************** GET CAMERA ******************************************
     if url_video == '':
         cap = cv2.VideoCapture(0)
     else:
@@ -80,6 +95,8 @@ def detect_5k(url_video, path_model, path_deepsoft,flag_save=False, fps=None, na
                                        cv2.VideoWriter_fourcc(*'MJPG'), fps, (frame_width, frame_height))
 
     global image_set, list_point_area
+
+    # ************************************* GET FRAME *************************************************
     while True:
         start = time.time()
         ret, frame = cap.read()
@@ -165,26 +182,23 @@ def detect_5k(url_video, path_model, path_deepsoft,flag_save=False, fps=None, na
         bbox, label, score = y5_model.predict(image)
         bboxs, labels, scores = np.array(bbox), np.array(label), np.array(score)
 
-        # *********************** TRACKING PERSON AND AREA TRANSFORM ********************
+        # *********************** GET ID PERSON AND AREA TRANSFORM ********************
         if bbox is not None:
             id_person = (labels == 'person')
             bbox_person = bboxs[id_person]
-            score_person = scores[id_person]
-            if bbox_person is not None:
-                outputs = dsoft_model.update(bbox_person, score_person, image)
-                if len(outputs) > 0:
-                    # initial idx for dict
-                    idx = 0
-                    for box in outputs:
-                        if check_point_in_polygon(box[:4], list_point_area[:4]) != 360:
-                            continue
-                        list_bbox_body[idx] = box[:4]
-                        # transform point about bird-eyes-view
-                        coors_transform = get_transform(box[:4], transform)
-                        list_transform[idx] = coors_transform
-                        idx += 1
+            if len(bbox_person) > 0:
+                # initial idx for dict
+                idx = 0
+                for box in bbox_person:
+                    if check_point_in_polygon(box[:4], list_point_area[:4]) != 360:
+                        continue
+                    list_bbox_body[idx] = box[:4]
+                    # transform point about bird-eyes-view
+                    coors_transform = get_transform(box[:4], transform)
+                    list_transform[idx] = coors_transform
+                    idx += 1
 
-        # draw polygon
+        # ************************ DRAW POLYGON **********************************************
         for idx, point in enumerate(list_point_area[:4]):
             cv2.circle(frame, point, 5, (0, 0, 255), 10)
             if idx < len(list_point_area[:4]) - 1:
@@ -280,19 +294,21 @@ def detect_5k(url_video, path_model, path_deepsoft,flag_save=False, fps=None, na
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Detect Face On Video')
     parser.add_argument("-fn", "--file_name", help="video file name or rtsp", default='', type=str)
-    parser.add_argument("-ds", "--deepsort_checkpoint", type=str, default="deep_sort/deep/checkpoint/ckpt.t7")
     parser.add_argument("-op", "--option", help="if save video then choice option = 1", default=True, type=bool)
     parser.add_argument("-o", "--output", help="path to output video file", default='face_recording.avi', type=str)
     parser.add_argument("-f", "--fps", default=20, help="FPS of output video", type=int)
     args = parser.parse_args()
 
-    path_models = '/home/duyngu/Downloads/Do_An/model_training/Yolov5/best.pt'
-    path_deepsoft = args.deepsort_checkpoint
-    url = '/home/duyngu/Downloads/Do_An/pedestrians.avi'
+    # path model
+    path_models = WEIGHTS / 'result_yolov5/best.pt'
+
+    # path video test
+    url = '/home/duyngu/Downloads/Do_An/video_test/TownCentre.mp4'
+
     source = args.file_name
     cv2.namedWindow('video')
     cv2.setMouseCallback('video', get_pixel)
     # if run  as terminal, replace url = source
-    detect_5k(url_video=url, path_model=path_models, path_deepsoft=path_deepsoft,
+    detect_5k(url_video=url, path_model=path_models,
               flag_save=args.option, fps=args.fps, name_video=args.output)
 

@@ -16,7 +16,7 @@ class Y5Detect:
         self.model_image_size = 640
         self.conf_threshold = 0.4
         self.iou_threshold = 0.45
-        self.model, self.device = self.load_model(use_cuda=False)
+        self.model, self.device = self.load_model(use_cuda=True)
 
         stride = int(self.model.stride.max())  # model stride
         self.image_size = check_img_size(self.model_image_size, s=stride)

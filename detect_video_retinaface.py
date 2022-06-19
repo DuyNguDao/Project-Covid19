@@ -15,7 +15,13 @@ from retinaface import FaceDetection
 import time
 from classification.utils.load_model import Model
 from yolov5.detect import *
-from deep_sort import DeepSort
+from pathlib import Path
+
+
+# ******************************** ROOT PATH *****************************
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+WEIGHTS = ROOT / 'weight'
 
 
 def draw_bbox(image, bboxs):
@@ -123,7 +129,7 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--fps", default=20, help="FPS of output video", type=int)
 
     args = parser.parse_args()
-    path_models = "/home/duyngu/Desktop/Project_5K/model_training/classification"
-    source = args.file_name
+    path_models = WEIGHTS / 'result_mobilenetv2'
+    source = '/home/duyngu/Downloads/Do_An/video_test/TownCentre.mp4' # args.file_name
     detect_facemask(url_video=source, path_model=path_models, flag_save=args.option, fps=args.fps, name_video=args.output)
 

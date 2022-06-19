@@ -1,35 +1,30 @@
-# FACE MASK RECOGNITION, DISTANCE AND CROWD DENSITY
-### DEV
-- Dao Duy Ngu
-- Le Van Thien
-### Install conda environments
-- conda create --name detect_faces python=3.8
+# FACE MASK DETECT AND DISTANCE AND CROWD DENSITY ESTIMATES
+## Dev
+```
+Member:
+ - DAO DUY NGU
+ - LE VAN THIEN
+Instructor: TRAN THI MINH HANH
+```
+## Usage
 ### Install package
-- pip install -r requirements.txt
-## DETECT FACE MASK
-### Face detection and classification with deep learning
-### Detect face with Retinaface
-A simple package of face detection
-This package is built on top of the [Retinaface](https://github.com/biubug6/Pytorch_Retinaface)
-
-- Thank you authors of two backbone at link github:
-    - [Retinaface](https:/ttps://github.com/hphuongdhsp/retinaface)
-### Download model retinaface
-- [Mobilenet](https://drive.google.com/drive/folders/1nvKaj3pZJNJmxEWWYSCu-Xe1B3iBQKVr?usp=sharing)
-- [Resnet](https://drive.google.com/drive/folders/1nvKaj3pZJNJmxEWWYSCu-Xe1B3iBQKVr?usp=sharing)
-- Note: Download file about folder (./Project_5K/retinaface/weights)
-### Face Mask Classification with MobilenetV2
-#### Test video
-    - python detect_dir_image.py or detect_video_retinaface.py
-### Face mask detection with yoloV5
-#### Test video
-    - python detect_video_yolov5.py
-## Distance and Crowd density
-- Detect distance with bird-eyes method 
-    - python distance_bird_eyes_video.py
-    - click four point with top left, top right, bottom right, bottom left
-- Detect distance with distance camera 3D
-    - python detect_video_yolov5.py
-    - click seven point:
-      - click first four point: left, top right, bottom right, bottom left
-      - click again three point then compute pixel width, height: top left, top right, bottom left
+```
+git clone https://github.com/DuyNguDao/Project-Covid19.git
+cd Project-Covid19
+conda create --name covid19 python=3.8
+pip install -r requirements.txt
+```
+### Quick start
+```
+python distance_bird_eyes_video.py
+```
+## Guides setup distance and Crowd density estimates
+```
+- Config for camera at bird_eyes_view.yalm
+- At the first frame:
+    + Click seven point:
+      * click first four point: left, top right, bottom right, bottom left
+      * click again three point then compute pixel width, height: top left, top right, bottom left
+```
+## Datasets and result model training
+[dataset and result](https://drive.google.com/drive/folders/1jXLMOPBiPNicfkjhB8cHy3mRZSqjK_IE?usp=sharing)

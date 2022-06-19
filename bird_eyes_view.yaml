@@ -48,3 +48,28 @@ image_parameters2:
   - 581
   w_cm: 150
   h_cm: 150
+image_parameters3:
+  url: /home/duyngu/Downloads/Do_An/video_test/TownCentre.mp4
+  top_left:
+  - 877
+  - 143
+  top_right:
+  - 1596
+  - 227
+  bottom_right:
+  - 932
+  - 875
+  bottom_left:
+  - 61
+  - 518
+  coor_1:
+  - 944
+  - 807
+  coor_2:
+  - 1045
+  - 714
+  coor_3:
+  - 819
+  - 762
+  w_cm: 100
+  h_cm: 100
