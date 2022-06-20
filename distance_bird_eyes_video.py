@@ -97,6 +97,8 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
     global image_set, list_point_area
 
     # ************************************* GET FRAME *************************************************
+    total_frame = 0
+    time_start_all = time.time()
     while True:
         start = time.time()
         ret, frame = cap.read()
@@ -104,10 +106,15 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
             break
         if cv2.waitKey(1) == ord('q'):
             break
+        if cv2.waitKey(1) == ord('p'):
+            while True:
+                if cv2.waitKey(1) == ord('c'):
+                    break
+
         h, w, _ = frame.shape
 
         if h > 1080 and w > 1920:
-            frame = cv2.resize(frame, (1920, 1080), interpolation=cv2.INTER_AREA)
+            frame = cv2.resize(frame, (1366, 768), interpolation=cv2.INTER_AREA)
             h, w, _ = frame.shape
 
         if count == 0:
@@ -217,6 +224,13 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
             # draw bounding box of with mask and without mask
             frame, _ = draw_boxes(frame, box, label=label[idx], scores=score[idx])
 
+        # *************** CREATE BIRD EYES VIEW ****************************
+        # set size view, map
+        width_map = w_frame
+        height_map = h_frame
+        # draw bounding of person
+        view_map = np.zeros((height_map, width_map, 3), dtype='uint8')
+
         # ******************************* CHECK VIOLATES **********************
         # compute distance between every person detect in a frame
         # initial set contain the index of the person that violates the distance
@@ -231,13 +245,14 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
                         # append set index
                         violates_person.add(i)
                         violates_person.add(j)
-
-        # *************** CREATE BIRD EYES VIEW ****************************
-        # set size view, map
-        width_map = 480
-        height_map = h
-        # draw bounding of person
-        view_map = np.zeros((height_map, width_map, 3), dtype='uint8')
+                        x1, y1 = list_transform[i]
+                        x1, y1 = int(x1 * width_map / w_frame), int(y1 * height_map / h_frame)
+                        x2, y2 = list_transform[j]
+                        x2, y2 = int(x2 * width_map / w_frame), int(y2 * height_map / h_frame)
+                        cv2.line(view_map, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                        cv2.putText(view_map, '{} cm'.format(distance), ((x1 + x2)//2, (y1 + y2)//2),
+                                    cv2.FONT_HERSHEY_SIMPLEX,
+                                    0.5, (0, 0, 255), 2, cv2.LINE_AA)
         cv2.putText(view_map, 'High risk: ' + str(len(violates_person)), (0, 20), cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 2, cv2.LINE_AA)
         cv2.putText(view_map, 'Total person: ' + str(len(list_bbox_body)), (0, 40), cv2.FONT_HERSHEY_SIMPLEX,
@@ -261,7 +276,7 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
             cv2.circle(view_map, (p_x, p_y), 5, color, 10)
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
-        image_transform = cv2.resize(image_transform, (1280, 720), interpolation=cv2.INTER_AREA)
+        # image_transform = cv2.resize(image_transform, (1280, 720), interpolation=cv2.INTER_AREA)
         # ****************************************************************************8
 
         fps = int(1/(time.time()-start))
@@ -276,15 +291,18 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
                     0.5, (0, 0, 255), 2, cv2.LINE_AA)
 
         # paste frame and bird eyes view
-        frame = np.concatenate((frame, view_map), axis=1)
+        # frame = np.concatenate((frame, view_map), axis=1)
         frame = cv2.resize(frame, (w, h), interpolation=cv2.INTER_AREA)
+        cv2.imshow('video1', view_map)
         cv2.imshow('video', frame)
         # cv2.imshow('transform', image_transform)
         cv2.waitKey(1)
         count += 1
+        total_frame += 1
         if flag_save is True:
             video_writer.write(frame)
 
+    print('FPS average: {:d}'.format(int(total_frame/(time.time()-time_start_all))))
     cap.release()
     if flag_save is True:
         video_writer.release()
@@ -294,7 +312,7 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Detect Face On Video')
     parser.add_argument("-fn", "--file_name", help="video file name or rtsp", default='', type=str)
-    parser.add_argument("-op", "--option", help="if save video then choice option = 1", default=True, type=bool)
+    parser.add_argument("-op", "--option", help="if save video then choice option = 1", default=False, type=bool)
     parser.add_argument("-o", "--output", help="path to output video file", default='face_recording.avi', type=str)
     parser.add_argument("-f", "--fps", default=20, help="FPS of output video", type=int)
     args = parser.parse_args()
@@ -303,10 +321,11 @@ if __name__ == '__main__':
     path_models = WEIGHTS / 'result_yolov5/best.pt'
 
     # path video test
-    url = '/home/duyngu/Downloads/Do_An/video_test/TownCentre.mp4'
+    url = '/home/duyngu/Downloads/Do_An/video_test/output2.avi'
 
     source = args.file_name
     cv2.namedWindow('video')
+    cv2.resizeWindow('video', 1280, 720)
     cv2.setMouseCallback('video', get_pixel)
     # if run  as terminal, replace url = source
     detect_5k(url_video=url, path_model=path_models,

@@ -109,5 +109,4 @@ def compute_transform_matrix(list_bbox_area, list_bbox_frame):
     # w_frame = int(x_max - x_min)
     # find transform new
     # transform = cv2.getPerspectiveTransform(src, dst_translate)
-
     return transform, h_area, w_area

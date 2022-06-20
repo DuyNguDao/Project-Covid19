@@ -1,75 +1,50 @@
 image_parameters1:
-  url: /home/duyngu/Downloads/Do_An/Student_video.mp4
+  url: /home/duyngu/Downloads/Do_An/video_test/output.avi
   top_left:
-  - 252
-  - 379
+  - 788
+  - 254
   top_right:
-  - 477
-  - 318
+  - 874
+  - 263
   bottom_right:
-  - 850
-  - 440
+  - 948
+  - 694
   bottom_left:
-  - 630
-  - 596
+  - 727
+  - 676
   coor_1:
-  - 627
-  - 555
+  - 840
+  - 619
   coor_2:
-  - 681
-  - 516
+  - 740
+  - 609
   coor_3:
-  - 535
-  - 504
-  w_cm: 100
-  h_cm: 100
+  - 841
+  - 564
+  w_cm: 40
+  h_cm: 40
 image_parameters2:
-  url: /home/duyngu/Downloads/Do_An/pedestrians.avi
+  url: /home/duyngu/Downloads/Do_An/video_test/output2.avi
   top_left:
-  - 801
-  - 183
+  - 278
+  - 132
   top_right:
-  - 1515
-  - 283
+  - 843
+  - 144
   bottom_right:
-  - 1118
-  - 675
+  - 1122
+  - 607
   bottom_left:
-  - 216
-  - 445
+  - 12
+  - 584
   coor_1:
-  - 1092
-  - 614
+  - 895
+  - 569
   coor_2:
-  - 1162
-  - 534
+  - 825
+  - 573
   coor_3:
-  - 943
-  - 581
-  w_cm: 150
-  h_cm: 150
-image_parameters3:
-  url: /home/duyngu/Downloads/Do_An/video_test/TownCentre.mp4
-  top_left:
-  - 877
-  - 143
-  top_right:
-  - 1596
-  - 227
-  bottom_right:
-  - 932
-  - 875
-  bottom_left:
-  - 61
+  - 879
   - 518
-  coor_1:
-  - 944
-  - 807
-  coor_2:
-  - 1045
-  - 714
-  coor_3:
-  - 819
-  - 762
-  w_cm: 100
-  h_cm: 100
+  w_cm: 30
+  h_cm: 30

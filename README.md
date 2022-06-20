@@ -28,3 +28,15 @@ python distance_bird_eyes_video.py
 ```
 ## Datasets and result model training
 [dataset and result](https://drive.google.com/drive/folders/1jXLMOPBiPNicfkjhB8cHy3mRZSqjK_IE?usp=sharing)
+
+## Result
+
+* Frame 1
+![plot](./image/image1.png)
+![plot](./image/bird_eye_view1.png)
+* Frame 2
+![plot](./image/image2.png)
+![plot](./image/bird_eye_view2.png)
+* Frame 3
+![plot](./image/image3.png)
+![plot](./image/bird_eye_view3.png)
