@@ -18,7 +18,7 @@ class FaceDetection:
         self.model = load_model(self.net).to(self.device)
         self.model.eval()
 
-    def detect_faces(self, img_raw, confidence_threshold=0.9, top_k=5000, nms_threshold=0.4, keep_top_k=750, resize=1):
+    def detect_faces(self, img_raw, confidence_threshold=0.4, top_k=5000, nms_threshold=0.45, keep_top_k=750, resize=1):
         img = np.float32(img_raw)
         im_height, im_width = img.shape[:2]
         scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])

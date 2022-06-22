@@ -48,3 +48,29 @@ image_parameters2:
   - 518
   w_cm: 30
   h_cm: 30
+
+image_parameters3:
+  url: /home/duyngu/Downloads/Do_An/video_test/facemask3.mp4
+  top_left:
+  - 221
+  - 287
+  top_right:
+  - 268
+  - 284
+  bottom_right:
+  - 263
+  - 335
+  bottom_left:
+  - 212
+  - 331
+  coor_1:
+  - 250
+  - 325
+  coor_2:
+  - 254
+  - 312
+  coor_3:
+  - 236
+  - 321
+  w_cm: 10
+  h_cm: 10

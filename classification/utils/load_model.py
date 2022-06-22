@@ -5,6 +5,7 @@ from torchvision import transforms
 import cv2
 import pickle
 from classification.models.MobileNetV2 import mobilenet_v2
+import os
 
 
 class Model:
@@ -20,7 +21,7 @@ class Model:
         except:
             # load custom model
             self.model = mobilenet_v2(pretrained=False, num_classes=2).to(self.device)
-        with open(self.path + '/parameter.txt', 'r') as file:
+        with open(os.path.join(self.path, 'parameter.txt'), 'r') as file:
             temp = file.readline()
             temp = temp.split('=')[1].strip('\n').strip()
             self.input_size = int(temp)

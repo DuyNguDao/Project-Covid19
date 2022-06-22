@@ -220,10 +220,10 @@ def detect_5k(url_video, path_model, flag_save=False, fps=None, name_video='vide
         for idx, box in enumerate(bboxs):
             if label[idx] == 'person':
                 continue
-            count_without_mask += 1
+            if label[idx] == 'wihtout_mask':
+                count_without_mask += 1
             # draw bounding box of with mask and without mask
             frame, _ = draw_boxes(frame, box, label=label[idx], scores=score[idx])
-
         # *************** CREATE BIRD EYES VIEW ****************************
         # set size view, map
         width_map = w_frame
@@ -321,8 +321,9 @@ if __name__ == '__main__':
     path_models = WEIGHTS / 'result_yolov5/best.pt'
 
     # path video test
-    url = '/home/duyngu/Downloads/Do_An/video_test/output2.avi'
 
+    url = '/home/duyngu/Downloads/Do_An/video_test/output2.avi'
+    # url = '/home/duyngu/Downloads/Do_An/video_test/facemask3.mp4'
     source = args.file_name
     cv2.namedWindow('video')
     cv2.resizeWindow('video', 1280, 720)
