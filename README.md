@@ -58,7 +58,4 @@ python distance_bird_eyes_video.py
 ## Contact
 ```
 email: ddngu0110@gmail.com
-phone: 
-+ Ngu Dao Duy (+84978879560)
-+ Thien Le Van (+84329615785)
 ```
